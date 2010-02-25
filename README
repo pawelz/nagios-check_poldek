@@ -5,3 +5,5 @@ system updates are available.
 commandline options:
 
   -v    - be verbose (prints errors on stderr)
+  -e N  - report error if there are >= N packages to install
+  -w N  - report warning if there are >= N packages to install

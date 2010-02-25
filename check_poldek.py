@@ -36,11 +36,13 @@ result = {"OK": 0, "WARNING": 1, "ERROR": 2}
 
 verbose = False
 
-try:
-  if (sys.argv[1] == "-v"):
+for n in range(len(sys.argv)):
+  if (sys.argv[n] == "-v"):
     verbose = True
-except IndexError:
-  pass
+  if (sys.argv[n] == "-e"):
+    errorLevel = int(sys.argv[n+1])
+  if (sys.argv[n] == "-w"):
+    warningLevel = int(sys.argv[n+1])
 
 # Functions
 def version():
@@ -84,7 +86,7 @@ for line in p.stdout:
 
   m = reResult.match(line)
   if (m):
-    numberOfPackages = m.group(1)
+    numberOfPackages = int(m.group(1))
     resultLine = line
 
 if (numberOfErrors > 0):
