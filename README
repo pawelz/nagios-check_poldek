@@ -1,0 +1,3 @@
+check_poldek is nagios plugin for monitoring systems using poldek as package
+manager (PLD Linux, or any rpm-based system using poldek). It checks if new
+system updates are available.
