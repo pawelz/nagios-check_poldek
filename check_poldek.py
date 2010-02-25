@@ -27,7 +27,7 @@ import re
 import subprocess
 
 ver = "0.0"
-copyright = "2009 TouK s.k.a. sp. z o.o."
+copyright = "2009, 2010 TouK s.k.a. sp. z o.o."
 
 errorLevel = 10
 warningLevel = 5
@@ -36,7 +36,7 @@ result = {"OK": 0, "WARNING": 1, "ERROR": 2}
 
 # Functions
 def version():
-  print "cojira v. " + ver + " Copyright (c) " + copyright
+  print "check_poldek v. " + ver + " Copyright (c) " + copyright
 
 def usage():
   print
