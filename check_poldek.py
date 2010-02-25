@@ -54,7 +54,7 @@ def usage():
   print
 
 def finish(rv, line):
-  print rv + ": " + line
+  print rv + ": " + line.splitlines()[0]
   sys.exit(result[rv])
 
 rv=subprocess.call(["poldek", "-q", "--up"])
