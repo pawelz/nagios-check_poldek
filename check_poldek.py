@@ -34,6 +34,14 @@ warningLevel = 5
 
 result = {"OK": 0, "WARNING": 1, "ERROR": 2}
 
+verbose = False
+
+try:
+  if (sys.argv[1] == "-v"):
+    verbose = True
+except IndexError:
+  pass
+
 # Functions
 def version():
   print "check_poldek v. " + ver + " Copyright (c) " + copyright
@@ -69,6 +77,8 @@ numberOfErrors=0
 for line in p.stdout:
   m = reError.match(line)
   if (m):
+    if (verbose):
+      print >> sys.stderr, line
     numberOfErrors += 1
     lasterror = m.group(1)
 
