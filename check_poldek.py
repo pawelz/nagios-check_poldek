@@ -39,7 +39,7 @@ verbose = False
 for n in range(len(sys.argv)):
   if (sys.argv[n] == "-v"):
     verbose = True
-  if (sys.argv[n] == "-e"):
+  if (sys.argv[n] == "-c"):
     errorLevel = int(sys.argv[n+1])
   if (sys.argv[n] == "-w"):
     warningLevel = int(sys.argv[n+1])
@@ -52,7 +52,7 @@ def usage():
   print
   version()
   print
-  print "check_poldek.py [-w WARN] [-e ERROR]"
+  print "check_poldek.py [-w WARN] [-c ERROR]"
   print
 
 def finish(rv, line):
