@@ -34,7 +34,7 @@ config = {"errorLevel":	10,
 		"verbose":		False,
 		"cache":		"/tmp/check_poldek"}
 
-result = {"OK": 0, "WARNING": 1, "ERROR": 2}
+result = {"POLDEK OK": 0, "POLDEK WARNING": 1, "POLDEK ERROR": 2}
 
 for n in range(len(sys.argv)):
 	if (sys.argv[n] == "-v"):
