@@ -4,6 +4,7 @@ system updates are available.
 
 commandline options:
 
-  -v    - be verbose (prints errors on stderr)
-  -c N  - report error if there are >= N packages to install
-  -w N  - report warning if there are >= N packages to install
+  -v          - be verbose (prints errors on stderr)
+  -c N        - report error if there are >= N packages to install
+  -w N        - report warning if there are >= N packages to install
+  --cache DIR - use DIR as poldek cache (default: /tmp/check_poldek)
