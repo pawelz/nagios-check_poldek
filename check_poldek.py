@@ -26,7 +26,7 @@ import sys
 import re
 import subprocess
 
-ver = "0.1"
+ver = "0.2"
 copyright = "2009, 2010 TouK sp. z o.o. s.k.a."
 
 config = {"errorLevel":	10,
