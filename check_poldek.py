@@ -61,7 +61,10 @@ def finish(rv, line):
 	print rv + ": " + line.splitlines()[0]
 	sys.exit(result[rv])
 
-rv=subprocess.call(["poldek", "--cache", config["cache"], "-q", "--up"])
+rv=subprocess.call(["poldek", "--cache", config["cache"], "-q", "--up"],
+		stderr=subprocess.STDOUT,
+		stdout=subprocess.PIPE)
+
 if rv < 0:
 	finish ("ERROR", "Could not update poldek indices: Killed by " + str(-rv) + " signal.")
 
@@ -73,9 +76,11 @@ p=subprocess.Popen(["poldek", "--cache", config["cache"], "-t", "--noask", "--up
 		stdout=subprocess.PIPE)
 
 reError = re.compile("^error: (.*$)")
+reWarn = re.compile("^warn: (.*$)")
 reResult = re.compile("^There[^0-9]* ([0-9]+) package.* to remove:$")
 
 numberOfErrors=0
+numberOfWarns=0
 
 # Iterate through lines of poldek output
 for line in p.stdout:
@@ -86,16 +91,26 @@ for line in p.stdout:
 		numberOfErrors += 1
 		lasterror = m.group(1)
 
+	m = reWarn.match(line)
+	if (m):
+		if (config["verbose"]):
+			print >> sys.stderr, line
+		numberOfWarns += 1
+		lastwarn = m.group(1)
+	
 	m = reResult.match(line)
 	if (m):
 		numberOfPackages = int(m.group(1))
 		resultLine = line
 
 if (numberOfErrors > 0):
-	finish ("ERROR", str(numberOfErrors) + " poldek errors: " + lasterror)
+	finish ("ERROR", str(numberOfErrors) + " poldek errors: " + lasterror + " and " + str(numberOfWarns) + " poldek warnings.")
 
 if (numberOfPackages >= config["errorLevel"]):
 	finish ("ERROR", resultLine)
+
+if (numberOfWarns > 0):
+	finish ("WARNING", str(numberOfWarns) + " poldek warnings: " + lastwarns)
 
 if (numberOfPackages >= config["warningLevel"]):
 	finish ("WARNING", resultLine)
