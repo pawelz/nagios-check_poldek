@@ -44,7 +44,7 @@ for n in range(len(sys.argv)):
 	if (sys.argv[n] == "-w"):
 		config["warningLevel"] = int(sys.argv[n+1])
 	if (sys.argv[n] == "--cache"):
-		config["cache"] = int(sys.argv[n+1])
+		config["cache"] = sys.argv[n+1]
 
 # Functions
 def version():
