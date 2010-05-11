@@ -31,7 +31,7 @@ copyright = "2009, 2010 TouK sp. z o.o. s.k.a."
 
 config = {"errorLevel":	10,
 		"warningLevel":	5,
-		"verbose":		false,
+		"verbose":		False,
 		"cache":		"/tmp/check_poldek"}
 
 result = {"OK": 0, "WARNING": 1, "ERROR": 2}
