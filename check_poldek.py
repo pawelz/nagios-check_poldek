@@ -31,7 +31,8 @@ copyright = "2009, 2010 TouK sp. z o.o. s.k.a."
 
 config = {"errorLevel":	10,
 		"warningLevel":	5,
-		"verbose":		false}
+		"verbose":		false,
+		"cache":		"/tmp/check_poldek"}
 
 result = {"OK": 0, "WARNING": 1, "ERROR": 2}
 
@@ -42,6 +43,8 @@ for n in range(len(sys.argv)):
 		config["errorLevel"] = int(sys.argv[n+1])
 	if (sys.argv[n] == "-w"):
 		config["warningLevel"] = int(sys.argv[n+1])
+	if (sys.argv[n] == "--cache"):
+		config["cache"] = int(sys.argv[n+1])
 
 # Functions
 def version():
@@ -51,21 +54,21 @@ def usage():
 	print
 	version()
 	print
-	print "check_poldek.py [-w WARN] [-c ERROR]"
+	print "check_poldek.py [-w WARN] [-c ERROR] [--cache DIRECTORY]"
 	print
 
 def finish(rv, line):
 	print rv + ": " + line.splitlines()[0]
 	sys.exit(result[rv])
 
-rv=subprocess.call(["poldek", "-q", "--up"])
+rv=subprocess.call(["poldek", "--cache", config["cache"], "-q", "--up"])
 if rv < 0:
 	finish ("ERROR", "Could not update poldek indices: Killed by " + str(-rv) + " signal.")
 
 if rv > 0:
 	finish ("ERROR", "Could not update poldek indices: Poldek error " + str(-rv) + ".")
 
-p=subprocess.Popen(["poldek", "-t", "--noask", "--upgrade-dist"],
+p=subprocess.Popen(["poldek", "--cache", config["cache"], "-t", "--noask", "--upgrade-dist"],
 		stderr=subprocess.STDOUT,
 		stdout=subprocess.PIPE)
 
