@@ -81,6 +81,8 @@ reResult = re.compile("^There[^0-9]* ([0-9]+) package.* to remove:$")
 
 numberOfErrors=0
 numberOfWarns=0
+numberOfPackages=0
+resultLine="System is up-to-date."
 
 # Iterate through lines of poldek output
 for line in p.stdout:
