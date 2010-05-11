@@ -8,3 +8,16 @@ commandline options:
   -c N        - report error if there are >= N packages to install
   -w N        - report warning if there are >= N packages to install
   --cache DIR - use DIR as poldek cache (default: /tmp/check_poldek)
+
+example configuration:
+
+  nrpe.cfg:
+    command[check_poldek]=/usr/lib/nagios/plugins/check_poldek --cache /var/cache/check_poldek -c 10 -w 5
+  
+  services.cfg:
+    define service {
+            use                             generic-service
+            host_name                       example_pld_machine
+            service_description             POLDEK
+            check_command                   check_remote_timeout!check_poldek!60
+    }
