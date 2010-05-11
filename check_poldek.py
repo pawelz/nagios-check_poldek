@@ -104,15 +104,15 @@ for line in p.stdout:
 		resultLine = line
 
 if (numberOfErrors > 0):
-	finish ("ERROR", str(numberOfErrors) + " poldek errors: " + lasterror + " and " + str(numberOfWarns) + " poldek warnings.")
+	finish ("POLDEK ERROR", str(numberOfErrors) + " poldek errors: " + lasterror + " and " + str(numberOfWarns) + " poldek warnings.")
 
 if (numberOfPackages >= config["errorLevel"]):
-	finish ("ERROR", resultLine)
+	finish ("POLDEK ERROR", resultLine)
 
 if (numberOfWarns > 0):
-	finish ("WARNING", str(numberOfWarns) + " poldek warnings: " + lastwarns)
+	finish ("POLDEK WARNING", str(numberOfWarns) + " poldek warnings: " + lastwarns)
 
 if (numberOfPackages >= config["warningLevel"]):
-	finish ("WARNING", resultLine)
+	finish ("POLDEK WARNING", resultLine)
 
-finish ("OK", resultLine)
+finish ("POLDEK OK", resultLine)
