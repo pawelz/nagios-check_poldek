@@ -37,38 +37,38 @@ result = {"OK": 0, "WARNING": 1, "ERROR": 2}
 verbose = False
 
 for n in range(len(sys.argv)):
-  if (sys.argv[n] == "-v"):
-    verbose = True
-  if (sys.argv[n] == "-c"):
-    errorLevel = int(sys.argv[n+1])
-  if (sys.argv[n] == "-w"):
-    warningLevel = int(sys.argv[n+1])
+	if (sys.argv[n] == "-v"):
+		verbose = True
+	if (sys.argv[n] == "-c"):
+		errorLevel = int(sys.argv[n+1])
+	if (sys.argv[n] == "-w"):
+		warningLevel = int(sys.argv[n+1])
 
 # Functions
 def version():
-  print "check_poldek v. " + ver + " Copyright (c) " + copyright
+	print "check_poldek v. " + ver + " Copyright (c) " + copyright
 
 def usage():
-  print
-  version()
-  print
-  print "check_poldek.py [-w WARN] [-c ERROR]"
-  print
+	print
+	version()
+	print
+	print "check_poldek.py [-w WARN] [-c ERROR]"
+	print
 
 def finish(rv, line):
-  print rv + ": " + line.splitlines()[0]
-  sys.exit(result[rv])
+	print rv + ": " + line.splitlines()[0]
+	sys.exit(result[rv])
 
 rv=subprocess.call(["poldek", "-q", "--up"])
 if rv < 0:
-  finish ("ERROR", "Could not update poldek indices: Killed by " + str(-rv) + " signal.")
+	finish ("ERROR", "Could not update poldek indices: Killed by " + str(-rv) + " signal.")
 
 if rv > 0:
-  finish ("ERROR", "Could not update poldek indices: Poldek error " + str(-rv) + ".")
+	finish ("ERROR", "Could not update poldek indices: Poldek error " + str(-rv) + ".")
 
 p=subprocess.Popen(["poldek", "-t", "--noask", "--upgrade-dist"],
-    stderr=subprocess.STDOUT,
-    stdout=subprocess.PIPE)
+		stderr=subprocess.STDOUT,
+		stdout=subprocess.PIPE)
 
 reError = re.compile("^error: (.*$)")
 reResult = re.compile("^There[^0-9]* ([0-9]+) package.* to remove:$")
@@ -77,25 +77,25 @@ numberOfErrors=0
 
 # Iterate through lines of poldek output
 for line in p.stdout:
-  m = reError.match(line)
-  if (m):
-    if (verbose):
-      print >> sys.stderr, line
-    numberOfErrors += 1
-    lasterror = m.group(1)
+	m = reError.match(line)
+	if (m):
+		if (verbose):
+			print >> sys.stderr, line
+		numberOfErrors += 1
+		lasterror = m.group(1)
 
-  m = reResult.match(line)
-  if (m):
-    numberOfPackages = int(m.group(1))
-    resultLine = line
+	m = reResult.match(line)
+	if (m):
+		numberOfPackages = int(m.group(1))
+		resultLine = line
 
 if (numberOfErrors > 0):
-  finish ("ERROR", str(numberOfErrors) + " poldek errors: " + lasterror)
+	finish ("ERROR", str(numberOfErrors) + " poldek errors: " + lasterror)
 
 if (numberOfPackages >= errorLevel):
-  finish ("ERROR", resultLine)
+	finish ("ERROR", resultLine)
 
 if (numberOfPackages >= warningLevel):
-  finish ("WARNING", resultLine)
+	finish ("WARNING", resultLine)
 
 finish ("OK", resultLine)
