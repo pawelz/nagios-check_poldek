@@ -21,3 +21,7 @@ example configuration:
             service_description             POLDEK
             check_command                   check_remote_timeout!check_poldek!60
     }
+
+TODO:
+
+  see http://wiki.github.com/pawelz/nagios-check_poldek/wishlist
