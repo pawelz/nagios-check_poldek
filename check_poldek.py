@@ -29,20 +29,19 @@ import subprocess
 ver = "0.1"
 copyright = "2009, 2010 TouK sp. z o.o. s.k.a."
 
-errorLevel = 10
-warningLevel = 5
+config = {"errorLevel":	10,
+		"warningLevel":	5,
+		"verbose":		false}
 
 result = {"OK": 0, "WARNING": 1, "ERROR": 2}
 
-verbose = False
-
 for n in range(len(sys.argv)):
 	if (sys.argv[n] == "-v"):
-		verbose = True
+		config["verbose"] = True
 	if (sys.argv[n] == "-c"):
-		errorLevel = int(sys.argv[n+1])
+		config["errorLevel"] = int(sys.argv[n+1])
 	if (sys.argv[n] == "-w"):
-		warningLevel = int(sys.argv[n+1])
+		config["warningLevel"] = int(sys.argv[n+1])
 
 # Functions
 def version():
@@ -79,7 +78,7 @@ numberOfErrors=0
 for line in p.stdout:
 	m = reError.match(line)
 	if (m):
-		if (verbose):
+		if (config["verbose"]):
 			print >> sys.stderr, line
 		numberOfErrors += 1
 		lasterror = m.group(1)
@@ -92,10 +91,10 @@ for line in p.stdout:
 if (numberOfErrors > 0):
 	finish ("ERROR", str(numberOfErrors) + " poldek errors: " + lasterror)
 
-if (numberOfPackages >= errorLevel):
+if (numberOfPackages >= config["errorLevel"]):
 	finish ("ERROR", resultLine)
 
-if (numberOfPackages >= warningLevel):
+if (numberOfPackages >= config["warningLevel"]):
 	finish ("WARNING", resultLine)
 
 finish ("OK", resultLine)
