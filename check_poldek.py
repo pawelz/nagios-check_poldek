@@ -37,7 +37,32 @@ config = {"errorLevel":	10,
 
 result = {"POLDEK OK": 0, "POLDEK WARNING": 1, "POLDEK ERROR": 2}
 
+# Functions
+def version():
+	print "check_poldek v. " + ver + " Copyright (c) " + copyright
+
+def usage():
+	print
+	version()
+	print
+	print "Usage:"
+	print "  check_poldek [-w WARN] [-c ERROR] [--cache DIRECTORY]"
+	print "               [-- arguments passed to poldek]"
+	print "  check_poldek --help"
+	print "  check_poldek --version"
+	print
+
+def finish(rv, line):
+	print rv + ": " + line.splitlines()[0]
+	sys.exit(result[rv])
+
 for n in range(len(sys.argv)):
+	if (sys.argv[n] == "--help"):
+		usage()
+		sys.exit()
+	if (sys.argv[n] == "--version"):
+		version()
+		sys.exit()
 	if (sys.argv[n] == "-v"):
 		config["verbose"] = True
 	if (sys.argv[n] == "-c"):
@@ -49,22 +74,6 @@ for n in range(len(sys.argv)):
 	if (sys.argv[n] == "--"):
 		config["extraArgs"] = sys.argv[n+1:]
 		berak
-
-# Functions
-def version():
-	print "check_poldek v. " + ver + " Copyright (c) " + copyright
-
-def usage():
-	print
-	version()
-	print
-	print "check_poldek.py [-w WARN] [-c ERROR] [--cache DIRECTORY]"
-	print "                [-- arguments passed to poldek]"
-	print
-
-def finish(rv, line):
-	print rv + ": " + line.splitlines()[0]
-	sys.exit(result[rv])
 
 rv=subprocess.call(["poldek", "--cache", config["cache"], "-q", "--up"] + config["extraArgs"],
 		stderr=subprocess.STDOUT,
