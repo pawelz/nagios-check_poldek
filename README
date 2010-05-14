@@ -27,6 +27,12 @@ example configuration:
             check_command                   check_remote_timeout!check_poldek!60
     }
 
+Author and Copyright:
+
+  Paweł Zuzelski <pzz@touk.pl>
+  Copyright (c) 2009, 2010 TouK sp. z o.o. s.k.a.
+  Licensed under the terms of MIT license.
+
 TODO:
 
   see http://wiki.github.com/pawelz/nagios-check_poldek/wishlist
