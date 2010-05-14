@@ -73,7 +73,7 @@ for n in range(len(sys.argv)):
 		config["cache"] = sys.argv[n+1]
 	if (sys.argv[n] == "--"):
 		config["extraArgs"] = sys.argv[n+1:]
-		berak
+		break
 
 rv=subprocess.call(["poldek", "--cache", config["cache"], "-q", "--up"] + config["extraArgs"],
 		stderr=subprocess.STDOUT,
