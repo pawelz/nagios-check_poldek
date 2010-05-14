@@ -7,6 +7,8 @@ usage:
 poldek [options] [-- extra arguments passed directly to poldek]
 
 available options:
+  --version   - print version info and quit
+  --help      - print short usage info and quit
   -v          - be verbose (prints errors on stderr)
   -c N        - report error if there are >= N packages to install
   -w N        - report warning if there are >= N packages to install
