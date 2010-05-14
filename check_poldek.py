@@ -19,7 +19,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-# Copyright (c) 2010 TouK sp. z o.o. s.k.a.
+# Copyright (c) 2009, 2010 TouK sp. z o.o. s.k.a.
 # Author: Paweł Zuzelski <pzz@touk.pl>
 
 import sys
