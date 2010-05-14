@@ -2,8 +2,11 @@ check_poldek is nagios plugin for monitoring systems using poldek as package
 manager (PLD Linux, or any rpm-based system using poldek). It checks if new
 system updates are available.
 
-commandline options:
+usage:
 
+poldek [options] [-- extra arguments passed directly to poldek]
+
+available options:
   -v          - be verbose (prints errors on stderr)
   -c N        - report error if there are >= N packages to install
   -w N        - report warning if there are >= N packages to install
@@ -12,7 +15,7 @@ commandline options:
 example configuration:
 
   nrpe.cfg:
-    command[check_poldek]=/usr/lib/nagios/plugins/check_poldek --cache /var/cache/check_poldek -c 10 -w 5
+    command[check_poldek]=/usr/lib/nagios/plugins/check_poldek --cache /var/cache/check_poldek -c 10 -w 5 -- -n th
   
   services.cfg:
     define service {
