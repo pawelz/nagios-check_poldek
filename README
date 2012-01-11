@@ -25,6 +25,7 @@ example configuration:
        command_line    /usr/lib/nagios/plugins/check_poldek $ARG1$
     }
 
+  services.cfg:
     ; service template defining command (local only) and check/notify intervals
     define service {
       use                     generic-service
@@ -39,7 +40,6 @@ example configuration:
       check_command           check_poldek
     }
 
-  services.cfg:
     define service {
       use                             check_poldek
       host_name                       example_pld_machine
