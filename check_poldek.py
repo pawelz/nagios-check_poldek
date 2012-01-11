@@ -126,6 +126,12 @@ for line in p.stdout:
 		numberOfPackages = int(m.group(1))
 		resultLine = line
 
+rv = p.wait()
+if rv < 0:
+	finish ("POLDEK ERROR", "Could not update poldek indices: Killed by " + str(-rv) + " signal.")
+if rv > 0:
+	finish ("POLDEK ERROR", "Could not update poldek indices: Poldek error " + str(-rv) + ".")
+
 if (numberOfErrors > 0):
 	finish ("POLDEK ERROR", str(numberOfErrors) + " poldek errors: " + lasterror + " and " + str(numberOfWarns) + " poldek warnings.")
 
