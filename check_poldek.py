@@ -80,10 +80,10 @@ rv=subprocess.call(["poldek", "--cache", config["cache"], "-q", "--up"] + config
 		stdout=subprocess.PIPE)
 
 if rv < 0:
-	finish ("ERROR", "Could not update poldek indices: Killed by " + str(-rv) + " signal.")
+	finish ("POLDEK ERROR", "Could not update poldek indices: Killed by " + str(-rv) + " signal.")
 
 if rv > 0:
-	finish ("ERROR", "Could not update poldek indices: Poldek error " + str(-rv) + ".")
+	finish ("POLDEK ERROR", "Could not update poldek indices: Poldek error " + str(-rv) + ".")
 
 p=subprocess.Popen(["poldek", "--cache", config["cache"], "-t", "--noask", "--upgrade-dist"] + config["extraArgs"],
 		stderr=subprocess.STDOUT,
@@ -113,7 +113,7 @@ for line in p.stdout:
 			print >> sys.stderr, line
 		numberOfWarns += 1
 		lastwarn = m.group(1)
-	
+
 	m = reResult.match(line)
 	if (m):
 		numberOfPackages = int(m.group(1))

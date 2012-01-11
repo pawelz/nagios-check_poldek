@@ -18,7 +18,7 @@ example configuration:
 
   nrpe.cfg:
     command[check_poldek]=/usr/lib/nagios/plugins/check_poldek --cache /var/cache/check_poldek -c 10 -w 5 -- -n th
-  
+
   services.cfg:
     define service {
             use                             generic-service
@@ -31,6 +31,7 @@ Author and Copyright:
 
   Paweł Zuzelski <pzz@touk.pl>
   Copyright (c) 2009, 2010 TouK sp. z o.o. s.k.a.
+  Copyright (c) 2012 Elan Ruusamäe <glen@pld-linux.org>
   Licensed under the terms of MIT license.
 
 TODO:
