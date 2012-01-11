@@ -108,7 +108,7 @@ def poldek(args):
     appends args passed as function args
     """
 
-    command = ["poldek", "-q", "--cache", CONFIG["cache"], "-q"]
+    command = ["poldek", "-q", "--cache", CONFIG["cache"]]
     command.extend(CONFIG["extraArgs"])
     command.extend(args)
 
