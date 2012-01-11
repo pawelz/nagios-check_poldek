@@ -17,14 +17,37 @@ available options:
 example configuration:
 
   nrpe.cfg:
-    command[check_poldek]=/usr/lib/nagios/plugins/check_poldek --cache /var/cache/check_poldek -c 10 -w 5 -- -n th
+    command[check_poldek]=/usr/lib/nagios/plugins/check_poldek --cache /var/cache/check_poldek -w 5 -c 10 -- -n th
+
+  commands.cfg:
+    define command {
+       command_name    check_poldek
+       command_line    /usr/lib/nagios/plugins/check_poldek $ARG1$
+    }
+
+    ; service template defining command (local only) and check/notify intervals
+    define service {
+      use                     generic-service
+      name                    check_poldek
+      service_description     check_poldek
+      register                0
+
+      ; check every 12h is sufficent, notify daily
+      normal_check_interval   720
+      notification_interval   1440
+
+      check_command           check_poldek
+    }
 
   services.cfg:
     define service {
-            use                             generic-service
-            host_name                       example_pld_machine
-            service_description             POLDEK
-            check_command                   check_remote_timeout!check_poldek!60
+      use                             check_poldek
+      host_name                       example_pld_machine
+      service_description             POLDEK
+      ; for local check
+      check_command                   check_poldek!-w 6 -c 10 -- -n th
+      ; for nrpe based check
+      check_command                   check_nrpe!check_poldek
     }
 
 Author and Copyright:
