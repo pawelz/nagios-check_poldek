@@ -152,7 +152,7 @@ if rv > 0:
 	finish ("POLDEK ERROR", "Could not run poldek: Poldek exited with " + str(rv) + ".")
 
 if (numberOfWarns > 0):
-	finish ("POLDEK WARNING", str(numberOfWarns) + " poldek warnings: " + lastwarns)
+	finish ("POLDEK WARNING", str(numberOfWarns) + " poldek warnings: " + lastwarn)
 
 if (numberOfPackages >= config["warningLevel"]):
 	finish ("POLDEK WARNING", resultLine)
