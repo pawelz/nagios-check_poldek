@@ -7,10 +7,10 @@
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -75,22 +75,24 @@ for n in range(len(sys.argv)):
 		config["extraArgs"] = sys.argv[n+1:]
 		break
 
-rv=subprocess.call(["poldek", "--cache", config["cache"], "-q", "--up"] + config["extraArgs"],
-		stderr=subprocess.STDOUT,
-		stdout=subprocess.PIPE)
-
+# sync indexes
+command = ["poldek", "--cache", config["cache"], "-q", "--up"] + config["extraArgs"]
+if (config["verbose"]):
+	print >> sys.stderr, "executing: %s" % " ".join(command)
+rv = subprocess.call(command, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
 if rv < 0:
 	finish ("POLDEK ERROR", "Could not update poldek indices: Killed by " + str(-rv) + " signal.")
-
 if rv > 0:
 	finish ("POLDEK ERROR", "Could not update poldek indices: Poldek error " + str(-rv) + ".")
 
-p=subprocess.Popen(["poldek", "--cache", config["cache"], "-t", "--noask", "--upgrade-dist"] + config["extraArgs"],
-		stderr=subprocess.STDOUT,
-		stdout=subprocess.PIPE)
+# invoke --upgrade-dist
+command = ["poldek", "--cache", config["cache"], "-t", "--noask", "--upgrade-dist"] + config["extraArgs"]
+if (config["verbose"]):
+	print >> sys.stderr, "executing: %s" % " ".join(command)
+p = subprocess.Popen(command, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
 
-reError = re.compile("^error: (.*$)")
-reWarn = re.compile("^warn: (.*$)")
+reError = re.compile("^error: (.*)$")
+reWarn = re.compile("^warn: (.*)$")
 reResult = re.compile("^There[^0-9]* ([0-9]+) package.* to remove:$")
 
 numberOfErrors=0
@@ -100,17 +102,22 @@ resultLine="System is up-to-date."
 
 # Iterate through lines of poldek output
 for line in p.stdout:
+	line = line.rstrip()
+
+	if (config["verbose"]):
+		print >> sys.stderr, "stdout: %s" % line
+
 	m = reError.match(line)
 	if (m):
 		if (config["verbose"]):
-			print >> sys.stderr, line
+			print >> sys.stderr, "ERROR: %s" % line
 		numberOfErrors += 1
 		lasterror = m.group(1)
 
 	m = reWarn.match(line)
 	if (m):
 		if (config["verbose"]):
-			print >> sys.stderr, line
+			print >> sys.stderr, "WARNING: %s " % line
 		numberOfWarns += 1
 		lastwarn = m.group(1)
 
