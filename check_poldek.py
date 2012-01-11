@@ -24,22 +24,21 @@
 # Copyright (c) 2012 Elan Ruusamäe <glen@pld-linux.org>
 
 import sys
-import re
 import subprocess
 
-__version__ = "0.6"
+__version__ = "0.7"
 __copyright__ = "2009, 2010 TouK sp. z o.o. s.k.a; 2012 Elan Ruusamäe"
 
 CONFIG = {
-    "errorLevel": 10,
     "warningLevel": 5,
+    "errorLevel": 10,
     "verbose": False,
     "sources": [],
     "cache": "/tmp/check_poldek",
     "extraArgs": [],
 }
 
-RESULT = {"OK": 0, "WARNING": 1, "ERROR": 2}
+RESULT = {"OK": 0, "WARNING": 1, "ERROR": 2, "CRITICAL": 2, "UNKNOWN": 3}
 
 # Functions
 def version():
@@ -47,7 +46,7 @@ def version():
     print plugin version and copyright
     """
 
-    print "check_poldek v. " + __version__ + " Copyright (c) " + __copyright__
+    print "check_poldek v" + __version__ + " Copyright (c) " + __copyright__
 
 def usage():
     """
@@ -59,20 +58,24 @@ def usage():
     print
     print "Usage:"
     print "  check_poldek [-w WARN] [-c ERROR] [--cache DIRECTORY]"
+    print "               [-n, --sn NAME]"
     print "               [-- arguments passed to poldek]"
     print "  check_poldek --help"
     print "  check_poldek --version"
     print
 
-def finish(code, message):
+def die(code, message):
     """
     print status message and exit
     """
 
-    print "POLDEK " + code+ ": " + message.splitlines()[0]
+    print "POLDEK " + code + ": " + message
     sys.exit(RESULT[code])
 
 def parseopts():
+    """
+    parse commandline options, setup them to CONFIG global
+    """
     for arg in range(len(sys.argv)):
         if sys.argv[arg] == "--help":
             usage()
@@ -97,21 +100,38 @@ def parseopts():
     for arg in CONFIG["sources"]:
         CONFIG["extraArgs"].extend(['-n', arg])
 
+def poldek(args):
+    """
+    invoke poldek
+    enforces cachedir
+    applies extraArgs from plugin commandline
+    appends args passed as function args
+    """
+
+    command = ["poldek", "-q", "--cache", CONFIG["cache"], "-q"]
+    command.extend(CONFIG["extraArgs"])
+    command.extend(args)
+
+    if (CONFIG["verbose"]):
+        print >> sys.stderr, "executing: %s" % " ".join(command)
+
+    proc = subprocess.Popen(command, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
+    stdout = proc.stdout
+    ret = proc.wait()
+    return (ret, stdout)
+
 def update_indexes():
     """
     sync indexes; abort on errors
     """
 
     # sync indexes
-    command = ["poldek", "--cache", CONFIG["cache"], "-q", "--up"] \
-        + CONFIG["extraArgs"]
-    if (CONFIG["verbose"]):
-        print >> sys.stderr, "executing: %s" % " ".join(command)
-    ret = subprocess.call(command, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
+    (ret, stdout) = poldek(["--up"])
     if ret < 0:
-        finish("ERROR", "Could not update poldek indices: Killed by " + str(-ret) + " signal.")
+        die("ERROR", "Could not update poldek indices: Killed by " + str(-ret) + " signal.")
     if ret > 0:
-        finish("ERROR", "Could not update poldek indices: Poldek exited with " + str(ret) + ".")
+        print "\n".join(stdout)
+        die("ERROR", "Could not update poldek indices: Poldek exited with " + str(ret) + ".")
 
 def check_updates():
     """
@@ -119,71 +139,62 @@ def check_updates():
     return output lines as array
     """
 
-    command = ["poldek", "--cache", CONFIG["cache"], "-t", "--noask", "--upgrade-dist"] + CONFIG["extraArgs"]
-    if CONFIG["verbose"]:
-        print >> sys.stderr, "executing: %s" % " ".join(command)
-    proc = subprocess.Popen(command, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
+    update_indexes()
 
-    r_error = re.compile("^error: (.*)$")
-    r_warn = re.compile("^warn: (.*)$")
-    r_warn_exclude = re.compile(".+multiple instances installed, skipped")
-    r_result = re.compile("^There[^0-9]* ([0-9]+) package.* to remove:$")
+    # check security updates
+    (ret, stdout) = poldek(["--cmd", "ls -S --qf '%{N}\n'"])
+    if ret < 0:
+        die("ERROR", "Could not run poldek: Killed by " + str(-ret) + " signal.")
+    if ret > 0:
+        die("ERROR", "Could not run poldek: Poldek exited with " + str(ret) + ".")
 
-    n_errors = 0
-    n_warnings = 0
-    n_packages = 0
-    status_line = "System is up-to-date."
-
-    # Iterate through lines of poldek output
-    for line in proc.stdout:
+    pkgs_security = []
+    for line in stdout:
         line = line.rstrip()
-
         if (CONFIG["verbose"]):
             print >> sys.stderr, "stdout: %s" % line
+        pkgs_security.append(line)
 
-        match = r_error.match(line)
-        if (match):
-            if (CONFIG["verbose"]):
-                print >> sys.stderr, "ERROR: %s" % line
-            n_errors += 1
-            lasterror = match.group(1)
-
-        match = r_warn.match(line)
-        if (match and not r_warn_exclude.match(line)):
-            if (CONFIG["verbose"]):
-                print >> sys.stderr, "WARNING: %s " % line
-            n_warnings += 1
-            lastwarn = match.group(1)
-
-        match = r_result.match(line)
-        if (match):
-            n_packages = int(match.group(1))
-            status_line = line
-
-    ret = proc.wait()
+    # check plain updates
+    (ret, stdout) = poldek(["--cmd", "ls -u --qf '%{N}\n'"])
     if ret < 0:
-        finish("ERROR", "Could not run poldek: Killed by " + str(-ret) + " signal.")
-
-    if n_errors > 0:
-        warning_msg = ""
-        if n_warnings > 0:
-            warning_msg = " and " + str(n_warnings) + " poldek warnings."
-        finish("ERROR", str(n_errors) + " poldek errors: " + lasterror + warning_msg)
-
-    if n_packages >= CONFIG["errorLevel"]:
-        finish("ERROR", status_line)
-
+        die("ERROR", "Could not run poldek: Killed by " + str(-ret) + " signal.")
     if ret > 0:
-        finish("ERROR", "Could not run poldek: Poldek exited with " + str(ret) + ".")
+        die("ERROR", "Could not run poldek: Poldek exited with " + str(ret) + ".")
 
-    if n_warnings > 0:
-        finish("WARNING", str(n_warnings) + " poldek warnings: " + lastwarn)
+    pkgs_update = []
+    for line in stdout:
+        line = line.rstrip()
+        if (CONFIG["verbose"]):
+            print >> sys.stderr, "stdout: %s" % line
+        pkgs_update.append(line)
 
-    if n_packages >= CONFIG["warningLevel"]:
-        finish("WARNING", status_line)
+    status_line = []
+    status_code = "UNKNOWN"
 
-    finish("OK", status_line)
+    # security updates mark always critical
+    if len(pkgs_security):
+        status_line.append("%d security updates (%s)" % (len(pkgs_security), ", ".join(pkgs_security)))
+        status_code = "CRITICAL"
+
+    n_pkgs_update = len(pkgs_update)
+    if n_pkgs_update == 0:
+        status_code = "OK"
+        status_line.append("No updates")
+    else:
+        if n_pkgs_update > CONFIG["errorLevel"]:
+            status_code = "CRITICAL"
+        elif n_pkgs_update > CONFIG["warningLevel"]:
+            if not status_code == "CRITICAL":
+                status_code = "WARNING"
+        else:
+            if not status_code == "CRITICAL":
+                status_code = "OK"
+
+        status_line.append("%d updates pending" % (len(pkgs_update)))
+
+    die(status_code, "; ".join(status_line))
 
 parseopts()
-update_indexes()
 check_updates()
+die("UNKNOWN", "Unkown result")
