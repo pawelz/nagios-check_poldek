@@ -179,6 +179,7 @@ def check_updates():
 
     n_pkgs_update = len(pkgs_update)
     if n_pkgs_update == 0:
+		# security updates always present in normal update list too
         status_code = "OK"
         status_line.append("No updates")
     else:
@@ -191,7 +192,7 @@ def check_updates():
             if not status_code == "CRITICAL":
                 status_code = "OK"
 
-        status_line.append("%d updates pending" % (len(pkgs_update)))
+        status_line.append("%d updates pending" % n_pkgs_update)
 
     die(status_code, "; ".join(status_line))
 
