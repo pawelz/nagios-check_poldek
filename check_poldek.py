@@ -130,14 +130,18 @@ for line in p.stdout:
 rv = p.wait()
 if rv < 0:
 	finish ("POLDEK ERROR", "Could not run poldek: Killed by " + str(-rv) + " signal.")
-if rv > 0:
-	finish ("POLDEK ERROR", "Could not run poldek: Poldek exited with " + str(rv) + ".")
 
 if (numberOfErrors > 0):
-	finish ("POLDEK ERROR", str(numberOfErrors) + " poldek errors: " + lasterror + " and " + str(numberOfWarns) + " poldek warnings.")
+	warning_msg = ""
+	if numberOfWarns > 0:
+		warning_msg = " and " + str(numberOfWarns) + " poldek warnings."
+	finish ("POLDEK ERROR", str(numberOfErrors) + " poldek errors: " + lasterror + warning_msg)
 
 if (numberOfPackages >= config["errorLevel"]):
 	finish ("POLDEK ERROR", resultLine)
+
+if rv > 0:
+	finish ("POLDEK ERROR", "Could not run poldek: Poldek exited with " + str(rv) + ".")
 
 if (numberOfWarns > 0):
 	finish ("POLDEK WARNING", str(numberOfWarns) + " poldek warnings: " + lastwarns)
