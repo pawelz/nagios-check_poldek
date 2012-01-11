@@ -21,13 +21,14 @@
 
 # Copyright (c) 2009, 2010 TouK sp. z o.o. s.k.a.
 # Author: Paweł Zuzelski <pzz@touk.pl>
+# Copyright (c) 2012 Elan Ruusamäe <glen@pld-linux.org>
 
 import sys
 import re
 import subprocess
 
-ver = "0.5"
-copyright = "2009, 2010 TouK sp. z o.o. s.k.a."
+ver = "0.6"
+copyright = "2009, 2010 TouK sp. z o.o. s.k.a; 2012 Elan Ruusamäe"
 
 config = {"errorLevel":	10,
 		"warningLevel":	5,
