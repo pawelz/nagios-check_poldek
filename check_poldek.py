@@ -61,23 +61,23 @@ def finish(rv, line):
     sys.exit(result[rv])
 
 for n in range(len(sys.argv)):
-    if (sys.argv[n] == "--help"):
+    if sys.argv[n] == "--help":
         usage()
         sys.exit()
-    if (sys.argv[n] == "--version"):
+    if sys.argv[n] == "--version":
         version()
         sys.exit()
-    if (sys.argv[n] == "-v"):
+    if sys.argv[n] == "-v":
         config["verbose"] = True
-    if (sys.argv[n] == "-c"):
+    if sys.argv[n] == "-c":
         config["errorLevel"] = int(sys.argv[n+1])
-    if (sys.argv[n] == "-w"):
+    if sys.argv[n] == "-w":
         config["warningLevel"] = int(sys.argv[n+1])
-    if (sys.argv[n] == "--cache"):
+    if sys.argv[n] == "--cache":
         config["cache"] = sys.argv[n+1]
-    if (sys.argv[n] == "--sn" or sys.argv[n] == "-n"):
+    if sys.argv[n] == "--sn" or sys.argv[n] == "-n":
         config["sources"].extend(sys.argv[n+1].split(','))
-    if (sys.argv[n] == "--"):
+    if sys.argv[n] == "--":
         config["extraArgs"] = sys.argv[n+1:]
         break
 
@@ -90,13 +90,13 @@ if (config["verbose"]):
     print >> sys.stderr, "executing: %s" % " ".join(command)
 rv = subprocess.call(command, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
 if rv < 0:
-    finish ("POLDEK ERROR", "Could not update poldek indices: Killed by " + str(-rv) + " signal.")
+    finish("POLDEK ERROR", "Could not update poldek indices: Killed by " + str(-rv) + " signal.")
 if rv > 0:
-    finish ("POLDEK ERROR", "Could not update poldek indices: Poldek exited with " + str(rv) + ".")
+    finish("POLDEK ERROR", "Could not update poldek indices: Poldek exited with " + str(rv) + ".")
 
 # invoke --upgrade-dist
 command = ["poldek", "--cache", config["cache"], "-t", "--noask", "--upgrade-dist"] + config["extraArgs"]
-if (config["verbose"]):
+if config["verbose"]:
     print >> sys.stderr, "executing: %s" % " ".join(command)
 p = subprocess.Popen(command, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
 
@@ -104,10 +104,10 @@ reError = re.compile("^error: (.*)$")
 reWarn = re.compile("^warn: (.*)$")
 reResult = re.compile("^There[^0-9]* ([0-9]+) package.* to remove:$")
 
-numberOfErrors=0
-numberOfWarns=0
-numberOfPackages=0
-resultLine="System is up-to-date."
+numberOfErrors = 0
+numberOfWarns = 0
+numberOfPackages = 0
+resultLine = "System is up-to-date."
 
 # Iterate through lines of poldek output
 for line in p.stdout:
@@ -137,24 +137,24 @@ for line in p.stdout:
 
 rv = p.wait()
 if rv < 0:
-    finish ("POLDEK ERROR", "Could not run poldek: Killed by " + str(-rv) + " signal.")
+    finish("POLDEK ERROR", "Could not run poldek: Killed by " + str(-rv) + " signal.")
 
-if (numberOfErrors > 0):
+if numberOfErrors > 0:
     warning_msg = ""
     if numberOfWarns > 0:
         warning_msg = " and " + str(numberOfWarns) + " poldek warnings."
-    finish ("POLDEK ERROR", str(numberOfErrors) + " poldek errors: " + lasterror + warning_msg)
+    finish("POLDEK ERROR", str(numberOfErrors) + " poldek errors: " + lasterror + warning_msg)
 
-if (numberOfPackages >= config["errorLevel"]):
-    finish ("POLDEK ERROR", resultLine)
+if numberOfPackages >= config["errorLevel"]:
+    finish("POLDEK ERROR", resultLine)
 
 if rv > 0:
-    finish ("POLDEK ERROR", "Could not run poldek: Poldek exited with " + str(rv) + ".")
+    finish("POLDEK ERROR", "Could not run poldek: Poldek exited with " + str(rv) + ".")
 
-if (numberOfWarns > 0):
-    finish ("POLDEK WARNING", str(numberOfWarns) + " poldek warnings: " + lastwarn)
+if numberOfWarns > 0:
+    finish("POLDEK WARNING", str(numberOfWarns) + " poldek warnings: " + lastwarn)
 
-if (numberOfPackages >= config["warningLevel"]):
-    finish ("POLDEK WARNING", resultLine)
+if numberOfPackages >= config["warningLevel"]:
+    finish("POLDEK WARNING", resultLine)
 
-finish ("POLDEK OK", resultLine)
+finish("POLDEK OK", resultLine)
