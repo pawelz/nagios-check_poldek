@@ -30,11 +30,14 @@ import subprocess
 ver = "0.6"
 copyright = "2009, 2010 TouK sp. z o.o. s.k.a; 2012 Elan Ruusamäe"
 
-config = {"errorLevel":	10,
+config = {
+		"errorLevel":	10,
 		"warningLevel":	5,
 		"verbose":		False,
+		"sources":		[],
 		"cache":		"/tmp/check_poldek",
-		"extraArgs":	[]}
+		"extraArgs":	[],
+}
 
 result = {"POLDEK OK": 0, "POLDEK WARNING": 1, "POLDEK ERROR": 2}
 
@@ -72,9 +75,14 @@ for n in range(len(sys.argv)):
 		config["warningLevel"] = int(sys.argv[n+1])
 	if (sys.argv[n] == "--cache"):
 		config["cache"] = sys.argv[n+1]
+	if (sys.argv[n] == "--sn" or sys.argv[n] == "-n"):
+		config["sources"].extend(sys.argv[n+1].split(','))
 	if (sys.argv[n] == "--"):
 		config["extraArgs"] = sys.argv[n+1:]
 		break
+
+for n in config["sources"]:
+	config["extraArgs"].extend(['-n', n])
 
 # sync indexes
 command = ["poldek", "--cache", config["cache"], "-q", "--up"] + config["extraArgs"]

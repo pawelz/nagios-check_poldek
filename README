@@ -7,17 +7,18 @@ usage:
 poldek [options] [-- extra arguments passed directly to poldek]
 
 available options:
-  --version   - print version info and quit
-  --help      - print short usage info and quit
-  -v          - be verbose (prints errors on stderr)
-  -c N        - report error if there are >= N packages to install
-  -w N        - report warning if there are >= N packages to install
-  --cache DIR - use DIR as poldek cache (default: /tmp/check_poldek)
+  --version      - print version info and quit
+  --help         - print short usage info and quit
+  -v             - be verbose (prints errors on stderr)
+  -w N           - report warning if there are >= N packages to install (default 5)
+  -c N           - report error if there are >= N packages to install (default 10)
+  -n, --sn=NAME  - enable repository named NAME
+  --cache DIR    - use DIR as poldek cache (default: /tmp/check_poldek)
 
 example configuration:
 
   nrpe.cfg:
-    command[check_poldek]=/usr/lib/nagios/plugins/check_poldek --cache /var/cache/check_poldek -w 5 -c 10 -- -n th
+    command[check_poldek]=/usr/lib/nagios/plugins/check_poldek --cache /var/cache/check_poldek -w 5 -c 10 -n th
 
   commands.cfg:
     define command {
@@ -45,7 +46,7 @@ example configuration:
       host_name                       example_pld_machine
       service_description             POLDEK
       ; for local check
-      check_command                   check_poldek!-w 6 -c 10 -- -n th
+      check_command                   check_poldek!-w 6 -c 10 -n th
       ; for nrpe based check
       check_command                   check_nrpe!check_poldek
     }
