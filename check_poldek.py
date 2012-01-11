@@ -27,10 +27,10 @@ import sys
 import re
 import subprocess
 
-ver = "0.6"
-copyright = "2009, 2010 TouK sp. z o.o. s.k.a; 2012 Elan Ruusamäe"
+__version__ = "0.6"
+__copyright__ = "2009, 2010 TouK sp. z o.o. s.k.a; 2012 Elan Ruusamäe"
 
-config = {
+CONFIG = {
     "errorLevel": 10,
     "warningLevel": 5,
     "verbose": False,
@@ -39,13 +39,21 @@ config = {
     "extraArgs": [],
 }
 
-result = {"POLDEK OK": 0, "POLDEK WARNING": 1, "POLDEK ERROR": 2}
+RESULT = {"OK": 0, "WARNING": 1, "ERROR": 2}
 
 # Functions
 def version():
-    print "check_poldek v. " + ver + " Copyright (c) " + copyright
+    """
+    print plugin version and copyright
+    """
+
+    print "check_poldek v. " + __version__ + " Copyright (c) " + __copyright__
 
 def usage():
+    """
+    print version and usage
+    """
+
     print
     version()
     print
@@ -56,105 +64,125 @@ def usage():
     print "  check_poldek --version"
     print
 
-def finish(rv, line):
-    print rv + ": " + line.splitlines()[0]
-    sys.exit(result[rv])
+def finish(code, message):
+    """
+    print status message and exit
+    """
 
-for n in range(len(sys.argv)):
-    if sys.argv[n] == "--help":
-        usage()
-        sys.exit()
-    if sys.argv[n] == "--version":
-        version()
-        sys.exit()
-    if sys.argv[n] == "-v":
-        config["verbose"] = True
-    if sys.argv[n] == "-c":
-        config["errorLevel"] = int(sys.argv[n+1])
-    if sys.argv[n] == "-w":
-        config["warningLevel"] = int(sys.argv[n+1])
-    if sys.argv[n] == "--cache":
-        config["cache"] = sys.argv[n+1]
-    if sys.argv[n] == "--sn" or sys.argv[n] == "-n":
-        config["sources"].extend(sys.argv[n+1].split(','))
-    if sys.argv[n] == "--":
-        config["extraArgs"] = sys.argv[n+1:]
-        break
+    print "POLDEK " + code+ ": " + message.splitlines()[0]
+    sys.exit(RESULT[code])
 
-for n in config["sources"]:
-    config["extraArgs"].extend(['-n', n])
+def parseopts():
+    for arg in range(len(sys.argv)):
+        if sys.argv[arg] == "--help":
+            usage()
+            sys.exit()
+        if sys.argv[arg] == "--version":
+            version()
+            sys.exit()
+        if sys.argv[arg] == "-v":
+            CONFIG["verbose"] = True
+        if sys.argv[arg] == "-c":
+            CONFIG["errorLevel"] = int(sys.argv[arg + 1])
+        if sys.argv[arg] == "-w":
+            CONFIG["warningLevel"] = int(sys.argv[arg + 1])
+        if sys.argv[arg] == "--cache":
+            CONFIG["cache"] = sys.argv[arg + 1]
+        if sys.argv[arg] == "--sn" or sys.argv[arg] == "-n":
+            CONFIG["sources"].extend(sys.argv[arg + 1].split(','))
+        if sys.argv[arg] == "--":
+            CONFIG["extraArgs"] = sys.argv[arg + 1:]
+            break
 
-# sync indexes
-command = ["poldek", "--cache", config["cache"], "-q", "--up"] + config["extraArgs"]
-if (config["verbose"]):
-    print >> sys.stderr, "executing: %s" % " ".join(command)
-rv = subprocess.call(command, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
-if rv < 0:
-    finish("POLDEK ERROR", "Could not update poldek indices: Killed by " + str(-rv) + " signal.")
-if rv > 0:
-    finish("POLDEK ERROR", "Could not update poldek indices: Poldek exited with " + str(rv) + ".")
+    for arg in CONFIG["sources"]:
+        CONFIG["extraArgs"].extend(['-n', arg])
 
-# invoke --upgrade-dist
-command = ["poldek", "--cache", config["cache"], "-t", "--noask", "--upgrade-dist"] + config["extraArgs"]
-if config["verbose"]:
-    print >> sys.stderr, "executing: %s" % " ".join(command)
-p = subprocess.Popen(command, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
+def update_indexes():
+    """
+    sync indexes; abort on errors
+    """
 
-reError = re.compile("^error: (.*)$")
-reWarn = re.compile("^warn: (.*)$")
-reResult = re.compile("^There[^0-9]* ([0-9]+) package.* to remove:$")
+    # sync indexes
+    command = ["poldek", "--cache", CONFIG["cache"], "-q", "--up"] \
+        + CONFIG["extraArgs"]
+    if (CONFIG["verbose"]):
+        print >> sys.stderr, "executing: %s" % " ".join(command)
+    ret = subprocess.call(command, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
+    if ret < 0:
+        finish("ERROR", "Could not update poldek indices: Killed by " + str(-ret) + " signal.")
+    if ret > 0:
+        finish("ERROR", "Could not update poldek indices: Poldek exited with " + str(ret) + ".")
 
-numberOfErrors = 0
-numberOfWarns = 0
-numberOfPackages = 0
-resultLine = "System is up-to-date."
+def check_updates():
+    """
+    invoke --upgrade-dist
+    return output lines as array
+    """
 
-# Iterate through lines of poldek output
-for line in p.stdout:
-    line = line.rstrip()
+    command = ["poldek", "--cache", CONFIG["cache"], "-t", "--noask", "--upgrade-dist"] + CONFIG["extraArgs"]
+    if CONFIG["verbose"]:
+        print >> sys.stderr, "executing: %s" % " ".join(command)
+    proc = subprocess.Popen(command, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
 
-    if (config["verbose"]):
-        print >> sys.stderr, "stdout: %s" % line
+    r_error = re.compile("^error: (.*)$")
+    r_warn = re.compile("^warn: (.*)$")
+    r_result = re.compile("^There[^0-9]* ([0-9]+) package.* to remove:$")
 
-    m = reError.match(line)
-    if (m):
-        if (config["verbose"]):
-            print >> sys.stderr, "ERROR: %s" % line
-        numberOfErrors += 1
-        lasterror = m.group(1)
+    n_errors = 0
+    n_warnings = 0
+    n_packages = 0
+    status_line = "System is up-to-date."
 
-    m = reWarn.match(line)
-    if (m):
-        if (config["verbose"]):
-            print >> sys.stderr, "WARNING: %s " % line
-        numberOfWarns += 1
-        lastwarn = m.group(1)
+    # Iterate through lines of poldek output
+    for line in proc.stdout:
+        line = line.rstrip()
 
-    m = reResult.match(line)
-    if (m):
-        numberOfPackages = int(m.group(1))
-        resultLine = line
+        if (CONFIG["verbose"]):
+            print >> sys.stderr, "stdout: %s" % line
 
-rv = p.wait()
-if rv < 0:
-    finish("POLDEK ERROR", "Could not run poldek: Killed by " + str(-rv) + " signal.")
+        match = r_error.match(line)
+        if (match):
+            if (CONFIG["verbose"]):
+                print >> sys.stderr, "ERROR: %s" % line
+            n_errors += 1
+            lasterror = match.group(1)
 
-if numberOfErrors > 0:
-    warning_msg = ""
-    if numberOfWarns > 0:
-        warning_msg = " and " + str(numberOfWarns) + " poldek warnings."
-    finish("POLDEK ERROR", str(numberOfErrors) + " poldek errors: " + lasterror + warning_msg)
+        match = r_warn.match(line)
+        if (match):
+            if (CONFIG["verbose"]):
+                print >> sys.stderr, "WARNING: %s " % line
+            n_warnings += 1
+            lastwarn = match.group(1)
 
-if numberOfPackages >= config["errorLevel"]:
-    finish("POLDEK ERROR", resultLine)
+        match = r_result.match(line)
+        if (match):
+            n_packages = int(match.group(1))
+            status_line = line
 
-if rv > 0:
-    finish("POLDEK ERROR", "Could not run poldek: Poldek exited with " + str(rv) + ".")
+    ret = proc.wait()
+    if ret < 0:
+        finish("ERROR", "Could not run poldek: Killed by " + str(-ret) + " signal.")
 
-if numberOfWarns > 0:
-    finish("POLDEK WARNING", str(numberOfWarns) + " poldek warnings: " + lastwarn)
+    if n_errors > 0:
+        warning_msg = ""
+        if n_warnings > 0:
+            warning_msg = " and " + str(n_warnings) + " poldek warnings."
+        finish("ERROR", str(n_errors) + " poldek errors: " + lasterror + warning_msg)
 
-if numberOfPackages >= config["warningLevel"]:
-    finish("POLDEK WARNING", resultLine)
+    if n_packages >= CONFIG["errorLevel"]:
+        finish("ERROR", status_line)
 
-finish("POLDEK OK", resultLine)
+    if ret > 0:
+        finish("ERROR", "Could not run poldek: Poldek exited with " + str(ret) + ".")
+
+    if n_warnings > 0:
+        finish("WARNING", str(n_warnings) + " poldek warnings: " + lastwarn)
+
+    if n_packages >= CONFIG["warningLevel"]:
+        finish("WARNING", status_line)
+
+    finish("OK", status_line)
+
+parseopts()
+update_indexes()
+check_updates()
