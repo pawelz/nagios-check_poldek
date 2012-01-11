@@ -7,10 +7,10 @@
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -21,19 +21,23 @@
 
 # Copyright (c) 2009, 2010 TouK sp. z o.o. s.k.a.
 # Author: Paweł Zuzelski <pzz@touk.pl>
+# Copyright (c) 2012 Elan Ruusamäe <glen@pld-linux.org>
 
 import sys
 import re
 import subprocess
 
-ver = "0.5"
-copyright = "2009, 2010 TouK sp. z o.o. s.k.a."
+ver = "0.6"
+copyright = "2009, 2010 TouK sp. z o.o. s.k.a; 2012 Elan Ruusamäe"
 
-config = {"errorLevel":	10,
+config = {
+		"errorLevel":	10,
 		"warningLevel":	5,
 		"verbose":		False,
+		"sources":		[],
 		"cache":		"/tmp/check_poldek",
-		"extraArgs":	[]}
+		"extraArgs":	[],
+}
 
 result = {"POLDEK OK": 0, "POLDEK WARNING": 1, "POLDEK ERROR": 2}
 
@@ -71,26 +75,33 @@ for n in range(len(sys.argv)):
 		config["warningLevel"] = int(sys.argv[n+1])
 	if (sys.argv[n] == "--cache"):
 		config["cache"] = sys.argv[n+1]
+	if (sys.argv[n] == "--sn" or sys.argv[n] == "-n"):
+		config["sources"].extend(sys.argv[n+1].split(','))
 	if (sys.argv[n] == "--"):
 		config["extraArgs"] = sys.argv[n+1:]
 		break
 
-rv=subprocess.call(["poldek", "--cache", config["cache"], "-q", "--up"] + config["extraArgs"],
-		stderr=subprocess.STDOUT,
-		stdout=subprocess.PIPE)
+for n in config["sources"]:
+	config["extraArgs"].extend(['-n', n])
 
+# sync indexes
+command = ["poldek", "--cache", config["cache"], "-q", "--up"] + config["extraArgs"]
+if (config["verbose"]):
+	print >> sys.stderr, "executing: %s" % " ".join(command)
+rv = subprocess.call(command, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
 if rv < 0:
-	finish ("ERROR", "Could not update poldek indices: Killed by " + str(-rv) + " signal.")
-
+	finish ("POLDEK ERROR", "Could not update poldek indices: Killed by " + str(-rv) + " signal.")
 if rv > 0:
-	finish ("ERROR", "Could not update poldek indices: Poldek error " + str(-rv) + ".")
+	finish ("POLDEK ERROR", "Could not update poldek indices: Poldek exited with " + str(rv) + ".")
 
-p=subprocess.Popen(["poldek", "--cache", config["cache"], "-t", "--noask", "--upgrade-dist"] + config["extraArgs"],
-		stderr=subprocess.STDOUT,
-		stdout=subprocess.PIPE)
+# invoke --upgrade-dist
+command = ["poldek", "--cache", config["cache"], "-t", "--noask", "--upgrade-dist"] + config["extraArgs"]
+if (config["verbose"]):
+	print >> sys.stderr, "executing: %s" % " ".join(command)
+p = subprocess.Popen(command, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
 
-reError = re.compile("^error: (.*$)")
-reWarn = re.compile("^warn: (.*$)")
+reError = re.compile("^error: (.*)$")
+reWarn = re.compile("^warn: (.*)$")
 reResult = re.compile("^There[^0-9]* ([0-9]+) package.* to remove:$")
 
 numberOfErrors=0
@@ -100,33 +111,48 @@ resultLine="System is up-to-date."
 
 # Iterate through lines of poldek output
 for line in p.stdout:
+	line = line.rstrip()
+
+	if (config["verbose"]):
+		print >> sys.stderr, "stdout: %s" % line
+
 	m = reError.match(line)
 	if (m):
 		if (config["verbose"]):
-			print >> sys.stderr, line
+			print >> sys.stderr, "ERROR: %s" % line
 		numberOfErrors += 1
 		lasterror = m.group(1)
 
 	m = reWarn.match(line)
 	if (m):
 		if (config["verbose"]):
-			print >> sys.stderr, line
+			print >> sys.stderr, "WARNING: %s " % line
 		numberOfWarns += 1
 		lastwarn = m.group(1)
-	
+
 	m = reResult.match(line)
 	if (m):
 		numberOfPackages = int(m.group(1))
 		resultLine = line
 
+rv = p.wait()
+if rv < 0:
+	finish ("POLDEK ERROR", "Could not run poldek: Killed by " + str(-rv) + " signal.")
+
 if (numberOfErrors > 0):
-	finish ("POLDEK ERROR", str(numberOfErrors) + " poldek errors: " + lasterror + " and " + str(numberOfWarns) + " poldek warnings.")
+	warning_msg = ""
+	if numberOfWarns > 0:
+		warning_msg = " and " + str(numberOfWarns) + " poldek warnings."
+	finish ("POLDEK ERROR", str(numberOfErrors) + " poldek errors: " + lasterror + warning_msg)
 
 if (numberOfPackages >= config["errorLevel"]):
 	finish ("POLDEK ERROR", resultLine)
 
+if rv > 0:
+	finish ("POLDEK ERROR", "Could not run poldek: Poldek exited with " + str(rv) + ".")
+
 if (numberOfWarns > 0):
-	finish ("POLDEK WARNING", str(numberOfWarns) + " poldek warnings: " + lastwarns)
+	finish ("POLDEK WARNING", str(numberOfWarns) + " poldek warnings: " + lastwarn)
 
 if (numberOfPackages >= config["warningLevel"]):
 	finish ("POLDEK WARNING", resultLine)
