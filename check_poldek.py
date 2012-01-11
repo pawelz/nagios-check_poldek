@@ -126,6 +126,7 @@ def check_updates():
 
     r_error = re.compile("^error: (.*)$")
     r_warn = re.compile("^warn: (.*)$")
+    r_warn_exclude = re.compile(".+multiple instances installed, skipped")
     r_result = re.compile("^There[^0-9]* ([0-9]+) package.* to remove:$")
 
     n_errors = 0
@@ -148,7 +149,7 @@ def check_updates():
             lasterror = match.group(1)
 
         match = r_warn.match(line)
-        if (match):
+        if (match and not r_warn_exclude.match(line)):
             if (CONFIG["verbose"]):
                 print >> sys.stderr, "WARNING: %s " % line
             n_warnings += 1
