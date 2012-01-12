@@ -142,7 +142,7 @@ def check_updates():
     update_indexes()
 
     # check security updates
-    (ret, stdout) = poldek(["--cmd", "ls -S --qf '%{N}\n'"])
+    (ret, stdout) = poldek(["--cmd", "ls -S --qf 'pkg %{N}\n'"])
     if ret < 0:
         die("ERROR", "Could not run poldek: Killed by " + str(-ret) + " signal.")
     if ret > 0:
@@ -151,12 +151,15 @@ def check_updates():
     pkgs_security = []
     for line in stdout:
         line = line.rstrip()
+        split = line.split()
+        if len(split) != 2 or split[0] != "pkg":
+            die("ERROR", "unexpected line: " + line)
         if (CONFIG["verbose"]):
             print >> sys.stderr, "stdout: %s" % line
-        pkgs_security.append(line)
+        pkgs_security.append(split[1])
 
     # check plain updates
-    (ret, stdout) = poldek(["--cmd", "ls -u --qf '%{N}\n'"])
+    (ret, stdout) = poldek(["--cmd", "ls -u --qf 'pkg %{N}\n'"])
     if ret < 0:
         die("ERROR", "Could not run poldek: Killed by " + str(-ret) + " signal.")
     if ret > 0:
@@ -165,9 +168,12 @@ def check_updates():
     pkgs_update = []
     for line in stdout:
         line = line.rstrip()
+        split = line.split()
+        if len(split) != 2 or split[0] != "pkg":
+            die("ERROR", "unexpected line: " + line)
         if (CONFIG["verbose"]):
             print >> sys.stderr, "stdout: %s" % line
-        pkgs_update.append(line)
+        pkgs_update.append(split[1])
 
     status_line = []
     status_code = "UNKNOWN"
@@ -179,7 +185,7 @@ def check_updates():
 
     n_pkgs_update = len(pkgs_update)
     if n_pkgs_update == 0:
-		# security updates always present in normal update list too
+        # security updates always present in normal update list too
         status_code = "OK"
         status_line.append("No updates")
     else:
