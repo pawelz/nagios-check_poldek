@@ -34,7 +34,7 @@ CONFIG = {
     "warningLevel": 5,
     "errorLevel": 10,
     "verbose": False,
-    "sources": ['ac'],
+    "sources": [],
     "rpmdir": "/var/lib/rpm",
     "cache": "/tmp/check_poldek",
     "extraArgs": [],
