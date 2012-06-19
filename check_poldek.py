@@ -24,16 +24,18 @@
 # Copyright (c) 2012 Elan Ruusamäe <glen@pld-linux.org>
 
 import sys
+import os
 import subprocess
 
-__version__ = "0.7"
+__version__ = "0.8"
 __copyright__ = "2009, 2010 TouK sp. z o.o. s.k.a; 2012 Elan Ruusamäe"
 
 CONFIG = {
     "warningLevel": 5,
     "errorLevel": 10,
     "verbose": False,
-    "sources": [],
+    "sources": ['ac'],
+    "rpmdir": "/var/lib/rpm",
     "cache": "/tmp/check_poldek",
     "extraArgs": [],
 }
@@ -138,6 +140,13 @@ def check_updates():
     invoke --upgrade-dist
     return output lines as array
     """
+
+    # check that permissions are sufficent
+    if not os.access(os.path.join(CONFIG["rpmdir"], 'Packages'), os.R_OK):
+        die("ERROR", "rpm Packages accessible: %s" % os.path.join(CONFIG["rpmdir"], 'Packages'))
+
+    if not os.access(CONFIG["cache"], os.R_OK | os.W_OK | os.X_OK):
+        die("ERROR", "Cache dir not accessible: %s" % CONFIG["cache"])
 
     update_indexes()
 
